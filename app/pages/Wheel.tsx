@@ -113,6 +113,7 @@ const Wheel = ( props : {rouletteData : rouletteData, number: WheelNumber}) : JS
       loop: 1,
       easing: `cubicBezier(${bezier.join(",")})`
     });
+
   }
 
   useEffect(() => {
@@ -122,6 +123,7 @@ const Wheel = ( props : {rouletteData : rouletteData, number: WheelNumber}) : JS
       spinWheel(nextNumberInt);
     }
   }, [props.number]);
+
 
   return (
     <div className={"roulette-wheel"}>
