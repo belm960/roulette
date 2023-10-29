@@ -6,7 +6,7 @@ import { Item, PlacedChip, RouletteWrapperState, GameData, GameStages } from "./
 var classNames = require("classnames");
 import { io } from "socket.io-client";
 import ProgressBarRound from "./ProgressBar";
-import { Button } from "@radix-ui/themes";
+import { Text, Box, Button, Card, Flex, ScrollArea, Tabs } from "@radix-ui/themes";
 
 // var singleRotation = 0
 
@@ -183,13 +183,21 @@ class RouletteWrapper extends React.Component<any, any> {
         <div>
           <table className={"rouletteWheelWrapper"}>
             <tr>
-            <td className={"winnersBoard"}>
-            <div className={"winnerItemHeader hideElementsTest"} >WINNERS</div>
-              { 
-                this.state.winners.map((entry, index) => {
-                    return (<div className="winnerItem">{index+1}. {entry.username} won {entry.sum}$</div>);
-                })
-              }
+            <td className={"winnersBoard pt-5"}>
+              <Card style={{ maxWidth: 350 }}>
+                  <Text as="div" size="2" weight="bold">
+                    Winners
+                  </Text>
+                  <ScrollArea type="always" scrollbars="vertical" style={{ height: 200 }}>
+                    <Flex gap="4" p="2" style={{ width: 700 }}>
+                        { 
+                          this.state.winners.map((entry, index) => {
+                              return (<div className="winnerItem">{index+1}. {entry.username} ------ {entry.sum}$</div>);
+                          })
+                        }
+                    </Flex>
+                  </ScrollArea>
+              </Card>
             </td>
             <td><Wheel rouletteData={this.state.rouletteData} number={this.state.number} /></td>
             <td>
