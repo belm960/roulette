@@ -16,9 +16,9 @@ body {
 }
 body {
   font-family: sans-serif;
-  background-image: url(./pages/assets/felt.png),
-    -webkit-radial-gradient(50% 40%, circle farthest-corner, #14697c, #034e61);
-  background-size: 180px 180px, auto;
+  background-image:  -webkit-radial-gradient(10% 15%, circle farthest-corner, #000000, #525252);
+  background-repeat: no-repeat;
+  background-size: cover;
   background-attachment: fixed;
   user-select: none;
   touch-action: pan-y;

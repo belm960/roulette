@@ -258,7 +258,8 @@ class Board extends React.Component<any, any> {
                               onCellClick={this.onCellClick} 
                               leftMin={undefined} 
                               leftMax={undefined} 
-                              topMin={undefined} topMax={undefined}                            />
+                              topMin={undefined} topMax={undefined}
+                              key={currentItemChips}                          />
                           );
                         } else {
                           var chipKeyValue = cell.value + "";
@@ -292,6 +293,7 @@ class Board extends React.Component<any, any> {
                                 rowSpan={1}
                                 colSpan={1}
                                 cellClass={cellClass}
+                                key={currentItemChips}
                                 onCellClick={this.onCellClick} leftMin={undefined} leftMax={undefined} topMin={undefined} topMax={undefined}                              />
                             );
                           }

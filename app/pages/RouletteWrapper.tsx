@@ -6,7 +6,7 @@ import { Item, PlacedChip, RouletteWrapperState, GameData, GameStages } from "./
 var classNames = require("classnames");
 import { io } from "socket.io-client";
 import ProgressBarRound from "./ProgressBar";
-import { Text, Box, Button, Card, Flex, ScrollArea, Tabs } from "@radix-ui/themes";
+import { Text, Box, Button, Card, Flex, ScrollArea, Tabs, Table, Dialog, DialogClose, Inset, TableBody, Avatar } from "@radix-ui/themes";
 
 // var singleRotation = 0
 
@@ -46,6 +46,7 @@ class RouletteWrapper extends React.Component<any, any> {
   };
   socketServer: any;
   animateProgress: any;
+  balance = 1000;
 
   blackNumbers = [ 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 29, 28, 31, 33, 35 ];
   constructor(props: { username: string }) {
@@ -67,6 +68,12 @@ class RouletteWrapper extends React.Component<any, any> {
     this.socketServer.open();
     this.socketServer.on('stage-change', (data: string) => {
       var gameData = JSON.parse(data) as GameData
+      gameData.wins.forEach((win)=>
+      {
+        if (win.username === this.props.username){
+          this.balance =win.balance
+        }
+      })
       console.log(gameData)
 
       this.setGameData(gameData)      
@@ -127,6 +134,7 @@ class RouletteWrapper extends React.Component<any, any> {
     });
   }
   onChipClick(chip: number | null) {
+    this.clearBet()
     if (chip != null) {
       this.setState({
         chipsData: {
@@ -167,7 +175,13 @@ class RouletteWrapper extends React.Component<any, any> {
       chips.push(chipsPlaced);
      
    }
+   var bal = 0;
+   chips.forEach((chip)=>{
+      bal+=chip.sum
+   })
+    this.balance-=bal
     this.socketServer.emit("place-bet", JSON.stringify(chips));
+    this.socketServer.emit("balance", this.balance);
   }
 
   clearBet() { 
@@ -177,6 +191,15 @@ class RouletteWrapper extends React.Component<any, any> {
       }
     });
   }
+
+  clearBetChip(num: number) { 
+    this.setState({
+      chipsData: {
+        placedChips: new Map()
+      }
+    });
+    this.onChipClick(num)
+  }
   render() {
     return (
       <div>
@@ -185,17 +208,25 @@ class RouletteWrapper extends React.Component<any, any> {
             <tr>
             <td className={"winnersBoard pt-5"}>
               <Card style={{ maxWidth: 350 }}>
-                  <Text as="div" size="2" weight="bold">
-                    Winners
+                  <Text as="div" size="4" weight="bold">
+                    Winners Board
                   </Text>
-                  <ScrollArea type="always" scrollbars="vertical" style={{ height: 200 }}>
-                    <Flex gap="4" p="2" style={{ width: 700 }}>
+                  <ScrollArea type="always" scrollbars="vertical" style={{ height: 300 }}>
                         { 
                           this.state.winners.map((entry, index) => {
-                              return (<div className="winnerItem">{index+1}. {entry.username} ------ {entry.sum}$</div>);
+                              return (
+                              <Table.Root key={index}>
+                                <Table.Body>
+                                  <Table.Row>
+                                    <Table.RowHeaderCell>{index+1}</Table.RowHeaderCell>
+                                    <Table.Cell>{entry.username}</Table.Cell>
+                                    <Table.Cell>{entry.sum}</Table.Cell>
+                                  </Table.Row>
+                                </Table.Body>
+                              </Table.Root>
+                              );
                           })
                         }
-                    </Flex>
                   </ScrollArea>
               </Card>
             </td>
@@ -205,11 +236,11 @@ class RouletteWrapper extends React.Component<any, any> {
               { 
                 this.state.history.map((entry, index) => {
                   if (entry === 0) {
-                    return (<div className="green">{entry}</div>);
+                    return (<div key={index} className="green">{entry}</div>);
                   } else if (this.blackNumbers.includes(entry)) {
-                    return (<div className="black">{entry}</div>);
+                    return (<div key={index} className="black">{entry}</div>);
                   } else {
-                    return (<div className="red">{entry}</div>);
+                    return (<div key={index} className="red">{entry}</div>);
                   }
                 })
               }
@@ -226,17 +257,58 @@ class RouletteWrapper extends React.Component<any, any> {
         </div>
         <div className={"progressBar hideElementsTest"}>
           <ProgressBarRound stage={this.state.stage} maxDuration={this.state.endTime} currentDuration={this.state.time_remaining} />
+          <Dialog.Root>
+            <Dialog.Trigger>
+              <Button size="3" variant="solid" color="green">View Tickets</Button>
+            </Dialog.Trigger>
+            <Dialog.Content>
+              <Dialog.Title>Tickets</Dialog.Title>
+              <Inset side="x" my="5">
+                <Table.Root>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeaderCell>Full name</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Group</Table.ColumnHeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+
+                  <TableBody>
+                    <Table.Row>
+                      <Table.RowHeaderCell>Danilo Sousa</Table.RowHeaderCell>
+                      <Table.Cell>danilo@example.com</Table.Cell>
+                      <Table.Cell>Developer</Table.Cell>
+                    </Table.Row>
+
+                    <Table.Row>
+                      <Table.RowHeaderCell>Zahra Ambessa</Table.RowHeaderCell>
+                      <Table.Cell>zahra@example.com</Table.Cell>
+                      <Table.Cell>Admin</Table.Cell>
+                    </Table.Row>
+                  </TableBody>
+                </Table.Root>
+              </Inset>
+
+              <Flex gap="3" justify="end">
+                <DialogClose>
+                  <Button variant="soft" color="gray">
+                    Close
+                  </Button>
+                </DialogClose>
+              </Flex>
+            </Dialog.Content>
+          </Dialog.Root>
         </div>
-        <div className="roulette-actions hideElementsTest">
+        <div className="roulette-actions hideElementsTest" style={{maxWidth: "100%"}}>
           <ul>
             <li>
-            <Button  variant="solid" onClick={() => this.clearBet()} >Clear Bet</Button>
+            <Button  size="4" color="red" variant="solid" onClick={() => this.clearBet()} >Clear</Button>
             </li>
             <li className={"board-chip"}>
               <div
                 key={"chip_100"}
                 className={this.getChipClasses(100)}
-                onClick={() => this.onChipClick(100)}
+                onClick={() =>   this.onChipClick(100)  }
               >
                 100
               </div>
@@ -245,7 +317,7 @@ class RouletteWrapper extends React.Component<any, any> {
               <span key={"chip_20"}>
                 <div
                   className={this.getChipClasses(20)}
-                  onClick={() => this.onChipClick(20)}
+                  onClick={() =>   this.onChipClick(20)  }
                 >
                   20
                 </div>
@@ -255,7 +327,7 @@ class RouletteWrapper extends React.Component<any, any> {
               <span key={"chip_10"}>
                 <div
                   className={this.getChipClasses(10)}
-                  onClick={() => this.onChipClick(10)}
+                  onClick={() =>   this.onChipClick(10)  }
                 >
                   10
                 </div>
@@ -265,15 +337,29 @@ class RouletteWrapper extends React.Component<any, any> {
               <span key={"chip_5"}>
                 <div
                   className={this.getChipClasses(5)}
-                  onClick={() => this.onChipClick(5)}
+                  onClick={() =>   this.onChipClick(5)  }
                 >
                   5
                 </div>
               </span>
             </li>
+            <li style={{marginLeft: 20, marginRight: 20}}>
+              <Card size="1" style={{ width: 150 }}>
+                <Flex gap="3" align="center">
+                  <Box>
+                    <Text as="div" size="2" weight="bold">
+                      {this.props.username}
+                    </Text>
+                    <Text as="div" size="2" color="gray">
+                      {this.balance}
+                    </Text>
+                  </Box>
+                </Flex>
+              </Card>
+            </li>
             <li>
-            <Button disabled={this.state.stage === GameStages.PLACE_BET ? false : true}
-           variant="solid" onClick={() => this.placeBet()} >Place Bet</Button>
+            <Button size="4" color="green" disabled={this.state.stage === GameStages.PLACE_BET ? false : true}
+            variant="surface" onClick={() => this.placeBet()} >Place Bet</Button>
             </li>
           </ul>
         </div>

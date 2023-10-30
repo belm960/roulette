@@ -28,6 +28,7 @@ export interface Item {
 export interface PlacedChip {
   item: Item;
   sum: number;
+  total: number;
 }
 export type rouletteData = {
   numbers: number[];
@@ -47,6 +48,7 @@ export type RouletteWrapperState = {
 export type Winner = {
   username: string;
   sum: number;
+  balance: number;
 }
 export type ChipsData = {
   selectedChip: any;
@@ -68,5 +70,11 @@ export type GameData = {
   time_remaining: number;
   value: number;
   wins: Winner[],
-  history: number[]
+  history: number[],
+}
+
+export type User = {
+  username: string,
+  balance: number,
+  
 }

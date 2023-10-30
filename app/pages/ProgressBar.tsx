@@ -30,7 +30,7 @@ const ProgressBarRound = ( props : {stage : GameStages, maxDuration: number, cur
         : "NO MORE BETS"
       }
       </div>
-      <progress className={"linearProgressRounds"} value="0" max="100" />
+      <progress color="green" className={"linearProgressRounds"} value="0" max="100" />
     </div>
   );
 };
