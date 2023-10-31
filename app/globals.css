@@ -16,7 +16,7 @@ body {
 }
 body {
   font-family: sans-serif;
-  background-image:  -webkit-radial-gradient(10% 15%, circle farthest-corner, #000000, #525252);
+  background-image: url("https://images.unsplash.com/photo-1549778399-f94fd24d4697?auto=format&fit=crop&q=80&w=2574&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;

@@ -8,24 +8,22 @@ export default function Home() {
   const [usernameValue, setUsernameValue] = useState('');
   if (usernameValue === '') {
     return (
-      <div style={{maxWidth: 350, maxHeight: 200, margin: "auto" , marginTop: 200, background: "white",
-                    padding: 20 , borderRadius: 10}}>
+      <div>
+      <div style={{maxWidth: 400, margin: "auto", marginTop: 100}}>
+        <img src="https://th.bing.com/th/id/R.31312cd79f1c8025ecf6aef5385d6f0c?rik=oQJyZFHgUYtt%2fg&pid=ImgRaw&r=0" alt="" />
+      </div>
+      <div style={{maxWidth: 350, maxHeight: 200, margin: "auto" , marginTop: 10, background: "black",
+                    padding: 20 , borderRadius: 10,opacity: 0.3}}>
         <Flex gap="3" align="center">
-          <Avatar
-            size="3"
-            src="https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?&w=64&h=64&dpr=2&q=70&crop=focalpoint&fp-x=0.67&fp-y=0.5&fp-z=1.4&fit=crop"
-            radius="full"
-            fallback="T"
-          />
           <Box>
-            <h5 style={{fontWeight: "bolder"}}>
+            <h5 style={{fontWeight: "bolder",color: "white"}}>
               Create Account
             </h5>
           </Box>
         </Flex>
         <Flex direction="column" gap="6">
         <label style={{marginTop: 10}}>
-          <h6 style={{marginBottom: 10}}>
+          <h6 style={{marginBottom: 10, color: "white"}}>
             Name
           </h6>
           <TextField.Input
@@ -39,9 +37,6 @@ export default function Home() {
       </Flex>
 
       <Flex gap="3" mt="4" justify="end">
-          <Button variant="soft" color="gray">
-            Cancel
-          </Button>
           <Button onClick={(event) => 
           {
               if (stringValue.length > 5) {
@@ -51,6 +46,7 @@ export default function Home() {
         }>Login</Button>
     
       </Flex>
+  </div>
   </div>
     );
   } else {

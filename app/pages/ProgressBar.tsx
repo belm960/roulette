@@ -19,6 +19,12 @@ const ProgressBarRound = ( props : {stage : GameStages, maxDuration: number, cur
       autoplay: true,
       duration: duration
     })
+    if(props.stage !== GameStages.PLACE_BET){
+       window.scrollTo({
+        top: 0,
+        behavior: 'smooth' 
+      })
+    }
     
   }, [props.stage, props.maxDuration, props.currentDuration]);
   return (

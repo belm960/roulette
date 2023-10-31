@@ -2,6 +2,7 @@
 import React from "react";
 import Wheel from "./Wheel";
 import Board from "./Board";
+import { useEffect } from "react";
 import { Item, PlacedChip, RouletteWrapperState, GameData, GameStages } from "./Global";
 var classNames = require("classnames");
 import { io } from "socket.io-client";
@@ -63,6 +64,15 @@ class RouletteWrapper extends React.Component<any, any> {
     this.socketServer = io("http://localhost:8000");
   }
 
+
+  scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' 
+    });
+  }
+
+
   componentDidMount() {
     console.log("component mounted")
     this.socketServer.open();
@@ -88,6 +98,8 @@ class RouletteWrapper extends React.Component<any, any> {
   componentWillUnmount() {
     this.socketServer.close();
   }
+
+
   setGameData(gameData: GameData) { 
     if (gameData.stage === GameStages.NO_MORE_BETS) { // PLACE BET from 25 to 35
       var endTime = 35;
@@ -133,6 +145,7 @@ class RouletteWrapper extends React.Component<any, any> {
       }
     });
   }
+  
   onChipClick(chip: number | null) {
     this.clearBet()
     if (chip != null) {
@@ -181,7 +194,6 @@ class RouletteWrapper extends React.Component<any, any> {
    })
     this.balance-=bal
     this.socketServer.emit("place-bet", JSON.stringify(chips));
-    this.socketServer.emit("balance", this.balance);
   }
 
   clearBet() { 
@@ -207,28 +219,22 @@ class RouletteWrapper extends React.Component<any, any> {
           <table className={"rouletteWheelWrapper"}>
             <tr>
             <td className={"winnersBoard pt-5"}>
-              <Card style={{ maxWidth: 350 }}>
-                  <Text as="div" size="4" weight="bold">
-                    Winners Board
-                  </Text>
                   <ScrollArea type="always" scrollbars="vertical" style={{ height: 300 }}>
                         { 
                           this.state.winners.map((entry, index) => {
                               return (
-                              <Table.Root key={index}>
-                                <Table.Body>
-                                  <Table.Row>
-                                    <Table.RowHeaderCell>{index+1}</Table.RowHeaderCell>
-                                    <Table.Cell>{entry.username}</Table.Cell>
-                                    <Table.Cell>{entry.sum}</Table.Cell>
-                                  </Table.Row>
-                                </Table.Body>
-                              </Table.Root>
+                                <Card style={{ maxWidth: 100, marginLeft: 50}} variant="ghost">
+                                    <Text as="div" size="2" weight="bold">
+                                      {entry.username}
+                                    </Text>
+                                    <Text as="div" color="gray" size="2">
+                                      {entry.sum} Birr
+                                    </Text>
+                                </Card>
                               );
                           })
                         }
                   </ScrollArea>
-              </Card>
             </td>
             <td><Wheel rouletteData={this.state.rouletteData} number={this.state.number} /></td>
             <td>
