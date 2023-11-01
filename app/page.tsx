@@ -12,8 +12,8 @@ export default function Home() {
       <div style={{maxWidth: 400, margin: "auto", marginTop: 100}}>
         <img src="https://th.bing.com/th/id/R.31312cd79f1c8025ecf6aef5385d6f0c?rik=oQJyZFHgUYtt%2fg&pid=ImgRaw&r=0" alt="" />
       </div>
-      <div style={{maxWidth: 350, maxHeight: 200, margin: "auto" , marginTop: 10, background: "black",
-                    padding: 20 , borderRadius: 10,opacity: 0.3}}>
+      <div style={{maxWidth: 350, maxHeight: 200, margin: "auto" , marginTop: 10, background: "rgba(0,0,0,0.2)",
+                    padding: 20 , borderRadius: 10}}>
         <Flex gap="3" align="center">
           <Box>
             <h5 style={{fontWeight: "bolder",color: "white"}}>

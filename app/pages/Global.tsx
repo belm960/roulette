@@ -22,8 +22,13 @@ export interface Item {
   type: ValueType;
   value: number;
   valueSplit: number[];
+  odd: number
 }
-
+export interface Tickets{
+  chip: PlacedChip[],
+  odd: number,
+  balance: number,
+}
 
 export interface PlacedChip {
   item: Item;
@@ -62,6 +67,7 @@ export type WheelNumber = {
 export enum GameStages {
   PLACE_BET,
   NO_MORE_BETS,
+  DRAW,
   WINNERS,
   NONE
 }

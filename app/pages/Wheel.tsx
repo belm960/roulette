@@ -118,7 +118,7 @@ const Wheel = ( props : {rouletteData : rouletteData, number: WheelNumber}) : JS
 
   useEffect(() => {
     var nextNubmer = props.number.next;
-    if (nextNubmer != null && nextNubmer !== "") {
+    if (nextNubmer != null && nextNubmer !== "" && nextNubmer<37) {
       var nextNumberInt = parseInt(nextNubmer);
       spinWheel(nextNumberInt);
     }

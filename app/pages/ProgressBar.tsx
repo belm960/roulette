@@ -31,9 +31,11 @@ const ProgressBarRound = ( props : {stage : GameStages, maxDuration: number, cur
     <div>
       <div className="progressRoundTitle">
       {
-        (props.stage === GameStages.PLACE_BET) ? "PLACE BET" 
-        : (props.stage === GameStages.WINNERS)  ? " WINNERS"
-        : "NO MORE BETS"
+        (props.stage === GameStages.PLACE_BET) ? "PLACE BET" :
+        (props.stage === GameStages.NO_MORE_BETS)? "NO MORE BETS":
+        (props.stage === GameStages.DRAW)?"DRAWING":
+        (props.stage === GameStages.WINNERS)  ? " WINNERS"
+        : "DRAWING"
       }
       </div>
       <progress color="green" className={"linearProgressRounds"} value="0" max="100" />

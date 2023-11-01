@@ -5,15 +5,15 @@ var classNames = require("classnames");
 
 class Board extends React.Component<any, any> {
   numbers: Item[][];
-  other_1_12 = { type: ValueType.NUMBERS_1_12 } as Item;
-  other_2_12 = { type: ValueType.NUMBERS_2_12 } as Item;
+  other_1_12 = { type: ValueType.NUMBERS_1_12} as Item;
+  other_2_12 = { type: ValueType.NUMBERS_2_12} as Item;
   other_3_12 = { type: ValueType.NUMBERS_3_12 } as Item;
-  other_1_18 = { type: ValueType.NUMBERS_1_18 } as Item;
-  other_19_36 = { type: ValueType.NUMBERS_19_36 } as Item;
-  other_even = { type: ValueType.EVEN } as Item;
-  other_odd = { type: ValueType.ODD } as Item;
-  other_red = { type: ValueType.RED } as Item;
-  other_black = { type: ValueType.BLACK } as Item;
+  other_1_18 = { type: ValueType.NUMBERS_1_18} as Item;
+  other_19_36 = { type: ValueType.NUMBERS_19_36} as Item;
+  other_even = { type: ValueType.EVEN} as Item;
+  other_odd = { type: ValueType.ODD} as Item;
+  other_red = { type: ValueType.RED} as Item;
+  other_black = { type: ValueType.BLACK} as Item;
   totalNumbers = 37;
   rouletteWheenNumbers: number[];
 

@@ -3,11 +3,12 @@ import React from "react";
 import Wheel from "./Wheel";
 import Board from "./Board";
 import { useEffect } from "react";
-import { Item, PlacedChip, RouletteWrapperState, GameData, GameStages } from "./Global";
+import { Item, PlacedChip, RouletteWrapperState, GameData, GameStages, Tickets, ValueType } from "./Global";
 var classNames = require("classnames");
 import { io } from "socket.io-client";
 import ProgressBarRound from "./ProgressBar";
 import { Text, Box, Button, Card, Flex, ScrollArea, Tabs, Table, Dialog, DialogClose, Inset, TableBody, Avatar } from "@radix-ui/themes";
+import { TableFooter } from "@mui/material";
 
 // var singleRotation = 0
 
@@ -15,7 +16,7 @@ import { Text, Box, Button, Card, Flex, ScrollArea, Tabs, Table, Dialog, DialogC
 // var r2 = singleRotation * 2 // 19.45..
 
 class RouletteWrapper extends React.Component<any, any> {
-  
+
   rouletteWheelNumbers = [ 
     0, 32, 15, 19, 4, 21, 2, 25,
     17, 34, 6, 27, 13, 36, 11,
@@ -23,8 +24,6 @@ class RouletteWrapper extends React.Component<any, any> {
     1, 20, 14, 31, 9, 22, 18, 29,
     7, 28, 12, 35, 3, 26
   ];
-
-
   numberRef = React.createRef<HTMLInputElement>();
   state: RouletteWrapperState = {
     rouletteData: {
@@ -47,9 +46,9 @@ class RouletteWrapper extends React.Component<any, any> {
   };
   socketServer: any;
   animateProgress: any;
-  balance = 1000;
-
+  balance = 100;
   blackNumbers = [ 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 29, 28, 31, 33, 35 ];
+  tickets: Tickets[] = new Array()
   constructor(props: { username: string }) {
     super(props);
 
@@ -61,29 +60,32 @@ class RouletteWrapper extends React.Component<any, any> {
     this.placeBet = this.placeBet.bind(this);
     this.clearBet = this.clearBet.bind(this);
 
-    this.socketServer = io("http://localhost:8000");
+    this.socketServer = io("https://roulette-backend.onrender.com:8000");
   }
-
-
   scrollToTop() {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth' 
+      behavior: 'smooth'
     });
   }
-
-
   componentDidMount() {
     console.log("component mounted")
     this.socketServer.open();
     this.socketServer.on('stage-change', (data: string) => {
       var gameData = JSON.parse(data) as GameData
-      gameData.wins.forEach((win)=>
-      {
-        if (win.username === this.props.username){
-          this.balance =win.balance
-        }
-      })
+      if (gameData.stage !== GameStages.PLACE_BET && gameData.stage !== GameStages.NO_MORE_BETS){
+        gameData.wins.forEach((win)=>
+        {
+          if (win.username === this.props.username){
+            this.balance =win.balance
+            
+          }
+          if (gameData.stage===GameStages.WINNERS){
+            this.tickets = new Array()
+          }
+        })
+      
+      }
       console.log(gameData)
 
       this.setGameData(gameData)      
@@ -98,26 +100,28 @@ class RouletteWrapper extends React.Component<any, any> {
   componentWillUnmount() {
     this.socketServer.close();
   }
-
-
   setGameData(gameData: GameData) { 
     if (gameData.stage === GameStages.NO_MORE_BETS) { // PLACE BET from 25 to 35
-      var endTime = 35;
+      var endTime = 60;
+      var nextNumber = gameData.value
+      this.setState({ endTime: endTime, progressCountdown: endTime - gameData.time_remaining, number: { next: nextNumber }, stage: gameData.stage, time_remaining: gameData.time_remaining}); 
+    }
+    else if (gameData.stage === GameStages.DRAW) { // PLACE BET from 25 to 35
+      var endTime = 70;
       var nextNumber = gameData.value
       this.setState({ endTime: endTime, progressCountdown: endTime - gameData.time_remaining, number: { next: nextNumber }, stage: gameData.stage, time_remaining: gameData.time_remaining}); 
     } else if (gameData.stage === GameStages.WINNERS) { // PLACE BET from 35 to 59
-      var endTime = 59;
+      var endTime = 79;
       if (gameData.wins.length > 0) {
         this.setState({ endTime: endTime, progressCountdown: endTime - gameData.time_remaining,winners: gameData.wins,stage: gameData.stage, time_remaining: gameData.time_remaining, history: gameData.history }); 
       } else {
         this.setState({ endTime: endTime, progressCountdown: endTime - gameData.time_remaining, stage: gameData.stage, time_remaining: gameData.time_remaining, history: gameData.history }); 
      }
     } else { // PLACE BET from 0 to 25
-      var endTime = 25;
+      var endTime = 50;
       this.setState({endTime: endTime, progressCountdown: endTime - gameData.time_remaining, stage: gameData.stage , time_remaining: gameData.time_remaining}); 
     }
   }
-
   onCellClick(item: Item) {
     //console.log("----");
     var currentChips = this.state.chipsData.placedChips;
@@ -133,11 +137,11 @@ class RouletteWrapper extends React.Component<any, any> {
     console.log(this.state.chipsData.placedChips);
     console.log(item);
     if (currentChips.get(item) !== undefined) {
-      currentChip.sum += currentChips.get(item).sum;
+      currentChips.delete(item);
+    }else{
+        currentChips.set(item, currentChip);
     }
-
-    //console.log(currentChips[item]);
-    currentChips.set(item, currentChip);
+    
     this.setState({
       chipsData: {
         selectedChip: this.state.chipsData.selectedChip,
@@ -145,19 +149,16 @@ class RouletteWrapper extends React.Component<any, any> {
       }
     });
   }
-  
   onChipClick(chip: number | null) {
-    this.clearBet()
     if (chip != null) {
       this.setState({
         chipsData: {
           selectedChip: chip,
-          placedChips: this.state.chipsData.placedChips
+          placedChips: new Map()
         }
       });
     }
   }
-  
   getChipClasses(chip: number) {
     var cellClass = classNames({
       chip_selected: chip === this.state.chipsData.selectedChip,
@@ -175,26 +176,139 @@ class RouletteWrapper extends React.Component<any, any> {
       this.setState({ number: { next: nextNumber } });
     }
   }
-  placeBet() { 
+  oddCalculator(){
+
+  }
+  showBet() { 
     var placedChipsMap = this.state.chipsData.placedChips
     var chips: PlacedChip[] = new Array()
     for(let key of Array.from( placedChipsMap.keys()) ) {
+      var chipsPlaced = placedChipsMap.get(key) as PlacedChip
+      chips.push(chipsPlaced);}
+      return chips;
+    }
+  placeBet() { 
+    var placedChipsMap = this.state.chipsData.placedChips
+    var chips: PlacedChip[] = new Array()
+    var odd = 0;
+    var numbers= new Array();
+    for(let key of Array.from( placedChipsMap.keys()) ) {
 
       var chipsPlaced = placedChipsMap.get(key) as PlacedChip
-      console.log("place chips");
-      console.log(chips);
-      console.log(chipsPlaced);
-      console.log(chips.length);
+      var placedChipType = chipsPlaced.item.type
       chips.push(chipsPlaced);
-     
+      var chipOdd = 0;
+          if (placedChipType === ValueType.NUMBER)
+          {
+              chipOdd=1
+          }
+          else if (placedChipType === ValueType.BLACK)
+          { // if bet on black and win
+              chipOdd=18
+          }
+          else if (placedChipType === ValueType.RED)
+          { // if bet on red and win
+              chipOdd=18
+          }
+          else if (placedChipType === ValueType.NUMBERS_1_18)
+          { // if number is 1 to 18
+              chipOdd=18
+          }
+          else if (placedChipType === ValueType.NUMBERS_19_36)
+          { // if number is 19 to 36
+              chipOdd=18
+          }
+          else if (placedChipType === ValueType.NUMBERS_1_12)
+          { // if number is within range of row1
+              chipOdd=12
+          }
+          else if (placedChipType === ValueType.NUMBERS_2_12)
+          { // if number is within range of row2
+              chipOdd=12
+          }
+          else if (placedChipType === ValueType.NUMBERS_3_12)
+          { // if number is within range of row3
+              chipOdd=12
+          }
+          else if (placedChipType === ValueType.EVEN)
+          { // if number even
+                chipOdd=18
+            } 
+          else if (placedChipType === ValueType.ODD)
+          {// if number is odd
+                chipOdd=18
+          }
+      odd+=chipOdd
    }
-   var bal = 0;
-   chips.forEach((chip)=>{
-      bal+=chip.sum
-   })
-    this.balance-=bal
-    this.socketServer.emit("place-bet", JSON.stringify(chips));
+   var ball = this.balance
+   ball-=(chips[0].sum*chips.length)
+   if(ball<0){
+      alert("Insufficient Balance")
+   }else{
+    this.balance-=chips[0].sum*chips.length
+    console.log(odd)
+    this.tickets.push({chip: chips,odd: odd,balance: this.balance})
+    console.log(this.tickets)
+    this.socketServer.emit("place-bet", JSON.stringify(this.tickets));
+   }
+   this.clearBet();
+   
   }
+
+  calculateOdd(){
+      var placedChipsMap = this.state.chipsData.placedChips
+      var odd = 0;
+      for(let key of Array.from( placedChipsMap.keys()) ) {
+  
+        var chipsPlaced = placedChipsMap.get(key) as PlacedChip
+        var placedChipType = chipsPlaced.item.type
+        var chipOdd = 0;
+            if (placedChipType === ValueType.NUMBER)
+            {
+                chipOdd=1
+            }
+            else if (placedChipType === ValueType.BLACK)
+            { // if bet on black and win
+                chipOdd=18
+            }
+            else if (placedChipType === ValueType.RED)
+            { // if bet on red and win
+                chipOdd=18
+            }
+            else if (placedChipType === ValueType.NUMBERS_1_18)
+            { // if number is 1 to 18
+                chipOdd=18
+            }
+            else if (placedChipType === ValueType.NUMBERS_19_36)
+            { // if number is 19 to 36
+                chipOdd=18
+            }
+            else if (placedChipType === ValueType.NUMBERS_1_12)
+            { // if number is within range of row1
+                chipOdd=12
+            }
+            else if (placedChipType === ValueType.NUMBERS_2_12)
+            { // if number is within range of row2
+                chipOdd=12
+            }
+            else if (placedChipType === ValueType.NUMBERS_3_12)
+            { // if number is within range of row3
+                chipOdd=12
+            }
+            else if (placedChipType === ValueType.EVEN)
+            { // if number even
+                  chipOdd=18
+              } 
+            else if (placedChipType === ValueType.ODD)
+            {// if number is odd
+                  chipOdd=18
+            }
+        odd+=chipOdd}
+
+        return 36/odd
+
+     }
+
 
   clearBet() { 
     this.setState({
@@ -204,7 +318,7 @@ class RouletteWrapper extends React.Component<any, any> {
     });
   }
 
-  clearBetChip(num: number) { 
+  clearBetChip(num: number) {
     this.setState({
       chipsData: {
         placedChips: new Map()
@@ -219,16 +333,22 @@ class RouletteWrapper extends React.Component<any, any> {
           <table className={"rouletteWheelWrapper"}>
             <tr>
             <td className={"winnersBoard pt-5"}>
-                  <ScrollArea type="always" scrollbars="vertical" style={{ height: 300 }}>
+                  <ScrollArea type="always" scrollbars="vertical" style={{ height: 200, maxWidth: 255 }}>
                         { 
+                          this.state.winners.length==0?
+                            <Card style={{ maxWidth: 200, marginLeft: 50}} variant="surface" color="green">
+                              <Text as="div" size="2" weight="bold">
+                                NO ONE WON
+                              </Text>
+                            </Card>:
                           this.state.winners.map((entry, index) => {
                               return (
-                                <Card style={{ maxWidth: 100, marginLeft: 50}} variant="ghost">
+                                <Card style={{ maxWidth: 200, marginLeft: 50}} variant="surface" color="green">
                                     <Text as="div" size="2" weight="bold">
                                       {entry.username}
                                     </Text>
                                     <Text as="div" color="gray" size="2">
-                                      {entry.sum} Birr
+                                      Won {entry.sum} Birr
                                     </Text>
                                 </Card>
                               );
@@ -265,7 +385,7 @@ class RouletteWrapper extends React.Component<any, any> {
           <ProgressBarRound stage={this.state.stage} maxDuration={this.state.endTime} currentDuration={this.state.time_remaining} />
           <Dialog.Root>
             <Dialog.Trigger>
-              <Button size="3" variant="solid" color="green">View Tickets</Button>
+              <Button size="3" variant="surface" color="green">View Tickets</Button>
             </Dialog.Trigger>
             <Dialog.Content>
               <Dialog.Title>Tickets</Dialog.Title>
@@ -273,24 +393,29 @@ class RouletteWrapper extends React.Component<any, any> {
                 <Table.Root>
                   <Table.Header>
                     <Table.Row>
-                      <Table.ColumnHeaderCell>Full name</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Group</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Index</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Bet Amount</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Odd</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Win</Table.ColumnHeaderCell>
                     </Table.Row>
                   </Table.Header>
 
                   <TableBody>
-                    <Table.Row>
-                      <Table.RowHeaderCell>Danilo Sousa</Table.RowHeaderCell>
-                      <Table.Cell>danilo@example.com</Table.Cell>
-                      <Table.Cell>Developer</Table.Cell>
-                    </Table.Row>
-
-                    <Table.Row>
-                      <Table.RowHeaderCell>Zahra Ambessa</Table.RowHeaderCell>
-                      <Table.Cell>zahra@example.com</Table.Cell>
-                      <Table.Cell>Admin</Table.Cell>
-                    </Table.Row>
+                    {
+                      this.tickets.map(
+                        (ticket,index)=>{
+                          return (
+                           <Table.Row>
+                            <Table.RowHeaderCell>{index+1}</Table.RowHeaderCell>
+                            <Table.Cell>{ticket.chip[0].sum*ticket.chip.length}</Table.Cell>
+                            <Table.Cell>{36/ticket.odd}</Table.Cell>
+                            <Table.Cell>{(ticket.chip.length*ticket.chip[0].sum)*(36/ticket.odd)}</Table.Cell>
+                          </Table.Row>
+                          )
+                          
+                        }
+                      )
+                    }
                   </TableBody>
                 </Table.Root>
               </Inset>
@@ -357,15 +482,60 @@ class RouletteWrapper extends React.Component<any, any> {
                       {this.props.username}
                     </Text>
                     <Text as="div" size="2" color="gray">
-                      {this.balance}
+                      Balance: {this.balance} Birr
                     </Text>
                   </Box>
                 </Flex>
               </Card>
             </li>
             <li>
-            <Button size="4" color="green" disabled={this.state.stage === GameStages.PLACE_BET ? false : true}
-            variant="surface" onClick={() => this.placeBet()} >Place Bet</Button>
+            <Dialog.Root>
+              <Dialog.Trigger>
+                <Button size="4" color="green" 
+                disabled={
+                  this.state.stage === GameStages.PLACE_BET ? false : 
+                  (this.balance<(this.showBet().length*this.state.chipsData.selectedChip))?false: 
+                  this.state.chipsData.placedChips.length==0?false:true}
+                  variant="surface">Place Bet</Button>
+              </Dialog.Trigger>
+              <Dialog.Content>
+                <Dialog.Title>Your Bet Info</Dialog.Title>
+                <Dialog.Description>
+                  You Can Watch you Odd
+                </Dialog.Description>
+                <Inset side="x" my="5">
+                  <Table.Root>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeaderCell>Bet Amount</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Odd</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>P Win</Table.ColumnHeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+
+                    <TableBody>
+                      <Table.Row>
+                        <Table.RowHeaderCell>{(this.showBet().length)>0?this.showBet().length*this.state.chipsData.selectedChip:0}</Table.RowHeaderCell>
+                        <Table.Cell>{(this.showBet().length)>0?this.calculateOdd(): 0}</Table.Cell>
+                        <Table.Cell>{(this.showBet().length)>0?(this.showBet().length*this.state.chipsData.selectedChip)*(this.calculateOdd()): 0}</Table.Cell>
+                      </Table.Row>
+                    </TableBody>
+                  </Table.Root>
+                </Inset>
+
+                <Flex gap="3" justify="end">
+                  <DialogClose>
+                    <Button variant="soft" color="gray">
+                      Close
+                    </Button>
+                  </DialogClose>
+                  {this.showBet().length>0 && ((this.showBet.length*this.showBet()[0].sum)<=(this.balance))
+                  ?<Button variant="soft" color="green" onClick={()=>{this.placeBet()}}>Place Bet</Button>
+                  :this.showBet().length>0 && ((this.showBet.length*this.showBet()[0].sum)>(this.balance))?
+                  <Button variant="soft" color="green" >Insufficient Balance</Button>:<></>}
+                </Flex>
+              </Dialog.Content>
+            </Dialog.Root>
             </li>
           </ul>
         </div>
