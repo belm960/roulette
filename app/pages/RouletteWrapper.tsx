@@ -343,7 +343,7 @@ class RouletteWrapper extends React.Component<any, any> {
                             </Card>:
                           this.state.winners.map((entry, index) => {
                               return (
-                                <Card style={{ maxWidth: 200, marginLeft: 50}} variant="surface" color="green">
+                                <Card key={index} style={{ maxWidth: 200, marginLeft: 50}} variant="surface" color="green">
                                     <Text as="div" size="2" weight="bold">
                                       {entry.username}
                                     </Text>
@@ -405,7 +405,7 @@ class RouletteWrapper extends React.Component<any, any> {
                       this.tickets.map(
                         (ticket,index)=>{
                           return (
-                           <Table.Row>
+                           <Table.Row key={index}>
                             <Table.RowHeaderCell>{index+1}</Table.RowHeaderCell>
                             <Table.Cell>{ticket.chip[0].sum*ticket.chip.length}</Table.Cell>
                             <Table.Cell>{36/ticket.odd}</Table.Cell>
